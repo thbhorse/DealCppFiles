@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<wxsmith>
+	<object class="wxDialog" name="DealCppFilesDialog">
+		<title>DealCppFiles</title>
+		<size>977,760</size>
+		<id_arg>0</id_arg>
+		<object class="wxStaticText" name="ID_STATICTEXT1" variable="StaticText1" member="yes">
+			<label>Path</label>
+			<pos>16,24</pos>
+			<size>56,25</size>
+		</object>
+		<object class="wxTextCtrl" name="ID_TEXTCTRL1" variable="TextPath" member="yes">
+			<pos>80,16</pos>
+			<size>744,32</size>
+		</object>
+		<object class="wxStaticText" name="ID_STATICTEXT2" variable="StaticText2" member="yes">
+			<label>Old Function Name:</label>
+			<pos>16,56</pos>
+		</object>
+		<object class="wxTextCtrl" name="ID_TEXTCTRL2" variable="TextOldFunc" member="yes">
+			<pos>232,56</pos>
+			<size>592,32</size>
+		</object>
+		<object class="wxStaticText" name="ID_STATICTEXT3" variable="StaticText3" member="yes">
+			<label>New Function Express:</label>
+			<pos>24,112</pos>
+		</object>
+		<object class="wxTextCtrl" name="ID_TEXTCTRL3" variable="TextNewFunc" member="yes">
+			<pos>232,112</pos>
+			<size>592,192</size>
+			<style>wxTE_MULTILINE</style>
+		</object>
+		<object class="wxStaticText" name="ID_STATICTEXT4" variable="StaticText4" member="yes">
+			<label>Result:</label>
+			<pos>16,336</pos>
+		</object>
+		<object class="wxStaticText" name="ID_STATICTEXT5" variable="StaticResult" member="yes">
+			<label></label>
+			<pos>88,328</pos>
+			<size>848,104</size>
+			<style>wxBORDER_SIMPLE</style>
+		</object>
+		<object class="wxButton" name="ID_BUTTON1" variable="Button1" member="yes">
+			<label>Start</label>
+			<pos>56,480</pos>
+			<handler function="OnStartClick" entry="EVT_BUTTON" />
+		</object>
+		<object class="wxBitmapButton" name="ID_BITMAPBUTTON1" variable="BitmapButton1" member="yes">
+			<pos>232,488</pos>
+		</object>
+		<object class="wxButton" name="ID_BUTTON2" variable="Button2" member="yes">
+			<label>Quit</label>
+			<pos>208,480</pos>
+			<handler function="OnQuit" entry="EVT_BUTTON" />
+		</object>
+		<object class="wxButton" name="ID_BUTTON3" variable="Button3" member="yes">
+			<label>About</label>
+			<pos>360,480</pos>
+			<handler function="OnAbout" entry="EVT_BUTTON" />
+		</object>
+		<object class="wxStaticText" name="ID_STATICTEXT6" variable="StaticText5" member="yes">
+			<label>example:&#x0A;Old Function Name:\\t\\t__llseek&#x0A;New Function Express: \\t\\tSetFilePointer((HANDLE)%1,%2,0,%3)&#x0A;\\t\\tSetFilePointer(%1,%2,0,%3=0?FILE__BEGIN)</label>
+			<pos>72,560</pos>
+			<size>872,128</size>
+		</object>
+	</object>
+</wxsmith>
