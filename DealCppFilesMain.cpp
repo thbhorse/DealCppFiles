@@ -200,7 +200,7 @@ int DealCppFile(const std::string& filepath, const wxString& oldFunc, const wxSt
             while(endFun == std::string::npos) {
                 std::string nextLine;
                 if (std::getline(fileIn, nextLine)) {
-                    line += "\r\n" + nextLine;
+                    line += "\n" + nextLine;
                     lineNum++;
                     int kh = 0;
                     for(size_t i=pos; i < line.length(); i++) {
