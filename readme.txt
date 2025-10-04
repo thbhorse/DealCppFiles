@@ -9,3 +9,6 @@ SetFilePointer(%1,%2,%3,%4=0?FILE_BEGIN)
 (HFILE)CreateFile(%1, %2=OF_WRITE? GENERIC_WRITE, %2=OF_WRITE ? 0, 0, %2=OF_WRITE ? OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL , 0)
 
 CreateFile(%1, %2=GENERIC_WRITE? GENERIC_WRITE|GENERIC_READ, %3, %4, %5, %6, %7);
+
+WriteFile(fh, 0, 0, &written, 0)
+SetEndOfFile(%2=0?%1)

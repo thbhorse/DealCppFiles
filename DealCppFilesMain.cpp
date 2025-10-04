@@ -258,6 +258,19 @@ int DealCppFile(const std::string& filepath, const wxString& oldFunc, const wxSt
                                 std::string newParam2 = newParam.substr(ques + 1);
                                 if(condi == oldParam) {
                                     newParam = newParam2;
+                                    size_t percentPos = newParam.find('%');
+                                    if(percentPos != std::string::npos) {
+                                        int index2 = atoi(newParam.substr(percentPos + 1).c_str());
+                                        if(index2 <= oldParamCount && index2 >= 1) {
+                                            oldParam = *std::next(oldParamList.begin(), index2 - 1);
+                                            char key[10];
+                                            sprintf(key, "%%%d", index2);
+                                            newParam.replace(percentPos, strlen(key), oldParam);
+                                        }
+                                        else {
+                                            //notFit = true;  有错误，但继续处理，编译器可以发现错误
+                                        }
+                                    }
                                 } else {
                                     newParam = oldParam;
                                     notFit = true;
