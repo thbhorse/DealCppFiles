@@ -59,6 +59,8 @@ const wxWindowID DealCppFilesDialog::ID_BITMAPBUTTON1 = wxNewId();
 const wxWindowID DealCppFilesDialog::ID_BUTTON2 = wxNewId();
 const wxWindowID DealCppFilesDialog::ID_BUTTON3 = wxNewId();
 const wxWindowID DealCppFilesDialog::ID_STATICTEXT6 = wxNewId();
+const wxWindowID DealCppFilesDialog::ID_BUTTON4 = wxNewId();
+const wxWindowID DealCppFilesDialog::ID_BUTTON5 = wxNewId();
 //*)
 
 BEGIN_EVENT_TABLE(DealCppFilesDialog,wxDialog)
@@ -79,15 +81,19 @@ DealCppFilesDialog::DealCppFilesDialog(wxWindow* parent,wxWindowID id)
     TextNewFunc = new wxTextCtrl(this, ID_TEXTCTRL3, wxEmptyString, wxPoint(232,112), wxSize(592,192), wxTE_MULTILINE, wxDefaultValidator, _T("ID_TEXTCTRL3"));
     StaticText4 = new wxStaticText(this, ID_STATICTEXT4, _("Result:"), wxPoint(16,336), wxDefaultSize, 0, _T("ID_STATICTEXT4"));
     StaticResult = new wxStaticText(this, ID_STATICTEXT5, wxEmptyString, wxPoint(88,328), wxSize(848,104), wxBORDER_SIMPLE, _T("ID_STATICTEXT5"));
-    Button1 = new wxButton(this, ID_BUTTON1, _("Start"), wxPoint(56,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON1"));
+    Button1 = new wxButton(this, ID_BUTTON1, _("Replace"), wxPoint(56,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON1"));
     BitmapButton1 = new wxBitmapButton(this, ID_BITMAPBUTTON1, wxNullBitmap, wxPoint(232,488), wxDefaultSize, wxBU_AUTODRAW, wxDefaultValidator, _T("ID_BITMAPBUTTON1"));
-    Button2 = new wxButton(this, ID_BUTTON2, _("Quit"), wxPoint(208,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON2"));
-    Button3 = new wxButton(this, ID_BUTTON3, _("About"), wxPoint(360,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON3"));
-    StaticText5 = new wxStaticText(this, ID_STATICTEXT6, _("example:\nOld Function Name:\t\t_llseek\nNew Function Express: \t\tSetFilePointer((HANDLE)%1, %2, 0, %3)\n\t\t\t\tSetFilePointer(%1, %2, 0, %3 = 0 ? FILE_BEGIN)"), wxPoint(72,560), wxSize(872,128), 0, _T("ID_STATICTEXT6"));
+    Button2 = new wxButton(this, ID_BUTTON2, _("Quit"), wxPoint(688,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON2"));
+    Button3 = new wxButton(this, ID_BUTTON3, _("About"), wxPoint(816,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON3"));
+    StaticText5 = new wxStaticText(this, ID_STATICTEXT6, _("example:\nOld Function Name:\t\t_llseek\nNew Function Express: \t\tSetFilePointer((HANDLE)%1,%2,0,%3)\n\t\t\t\tSetFilePointer(%1,%2,0,%3=0\?FILE_BEGIN)"), wxPoint(72,560), wxSize(872,128), 0, _T("ID_STATICTEXT6"));
+    Button4 = new wxButton(this, ID_BUTTON4, _("->UTF8"), wxPoint(192,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON4"));
+    Button5 = new wxButton(this, ID_BUTTON5, _("->GBK"), wxPoint(328,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON5"));
 
     Connect(ID_BUTTON1, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&DealCppFilesDialog::OnStartClick);
     Connect(ID_BUTTON2, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&DealCppFilesDialog::OnQuit);
     Connect(ID_BUTTON3, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&DealCppFilesDialog::OnAbout);
+    Connect(ID_BUTTON4, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&DealCppFilesDialog::OnToUTF8Click);
+    Connect(ID_BUTTON5, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&DealCppFilesDialog::OnToGBKClick);
     //*)
 }
 
@@ -325,4 +331,113 @@ int DealCppFile(const std::string& filepath, const wxString& oldFunc, const wxSt
         fileOut.close();
     }
     return replaceCount;
+}
+
+// 将文件内容转为UTF-8编码并覆盖原文件
+bool ConvertFileToUTF8(const std::string& filepath) {
+    // 读取原文件内容（假设原编码为GBK）
+    std::ifstream fileIn(filepath, std::ios::binary);
+    if (!fileIn.is_open()) return false;
+    std::string content((std::istreambuf_iterator<char>(fileIn)), std::istreambuf_iterator<char>());
+    fileIn.close();
+
+    // GBK -> UTF-16
+    int wlen = MultiByteToWideChar(936, 0, content.data(), (int)content.size(), nullptr, 0);
+    if (wlen <= 0) return false;
+    std::wstring wcontent(wlen, 0);
+    MultiByteToWideChar(936, 0, content.data(), (int)content.size(), &wcontent[0], wlen);
+
+    // UTF-16 -> UTF-8
+    int u8len = WideCharToMultiByte(CP_UTF8, 0, wcontent.data(), wlen, nullptr, 0, nullptr, nullptr);
+    if (u8len <= 0) return false;
+    std::string utf8content(u8len, 0);
+    WideCharToMultiByte(CP_UTF8, 0, wcontent.data(), wlen, &utf8content[0], u8len, nullptr, nullptr);
+
+    // 写回UTF-8编码
+    std::ofstream fileOut(filepath, std::ios::binary | std::ios::trunc);
+    if (fileOut.is_open()) {
+        // 可选：写入UTF-8 BOM
+        // unsigned char bom[] = {0xEF, 0xBB, 0xBF};
+        // fileOut.write((char*)bom, 3);
+        fileOut.write(utf8content.data(), utf8content.size());
+        fileOut.close();
+        return true;
+    }
+    return false;
+}
+
+// 遍历目录下所有.cpp/.h文件并转为UTF-8
+int ConvertAllFilesToUTF8(const wxString& mypath) {
+    int count = 0;
+    namespace fs = std::filesystem;
+    for (const auto& entry : fs::directory_iterator(mypath.ToStdString())) {
+        std::string ext = entry.path().extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+        if (entry.is_regular_file() && (ext == ".cpp" || ext == ".h")) {
+            if(ConvertFileToUTF8(entry.path().string())) {
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
+void DealCppFilesDialog::OnToUTF8Click(wxCommandEvent& event)
+{
+    wxString mypath = TextPath->GetValue();
+    int count = ConvertAllFilesToUTF8(mypath);
+    StaticResult->SetLabel(wxString::Format("%d files converted to UTF-8.", count));
+}
+
+// 将文件内容从UTF-8转为GBK编码并覆盖原文件（C++17实现，使用WinAPI）
+bool ConvertFileToGBK(const std::string& filepath) {
+    // 读取原文件内容（假设原编码为UTF-8）
+    std::ifstream fileIn(filepath, std::ios::binary);
+    if (!fileIn.is_open()) return false;
+    std::string content((std::istreambuf_iterator<char>(fileIn)), std::istreambuf_iterator<char>());
+    fileIn.close();
+
+    // UTF-8 -> UTF-16
+    int wlen = MultiByteToWideChar(CP_UTF8, 0, content.data(), (int)content.size(), nullptr, 0);
+    if (wlen <= 0) return false;
+    std::wstring wcontent(wlen, 0);
+    MultiByteToWideChar(CP_UTF8, 0, content.data(), (int)content.size(), &wcontent[0], wlen);
+
+    // UTF-16 -> GBK
+    int gbklen = WideCharToMultiByte(936, 0, wcontent.data(), wlen, nullptr, 0, nullptr, nullptr);
+    if (gbklen <= 0) return false;
+    std::string gbkcontent(gbklen, 0);
+    WideCharToMultiByte(936, 0, wcontent.data(), wlen, &gbkcontent[0], gbklen, nullptr, nullptr);
+
+    // 写回GBK编码
+    std::ofstream fileOut(filepath, std::ios::binary | std::ios::trunc);
+    if (fileOut.is_open()) {
+        fileOut.write(gbkcontent.data(), gbkcontent.size());
+        fileOut.close();
+        return true;
+    }
+    return false;
+}
+
+// 遍历目录下所有.cpp/.h文件并转为GBK
+int ConvertAllFilesToGBK(const wxString& mypath) {
+    int count = 0;
+    namespace fs = std::filesystem;
+    for (const auto& entry : fs::directory_iterator(mypath.ToStdString())) {
+        std::string ext = entry.path().extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+        if (entry.is_regular_file() && (ext == ".cpp" || ext == ".h")) {
+            if(ConvertFileToGBK(entry.path().string())) {
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
+void DealCppFilesDialog::OnToGBKClick(wxCommandEvent& event)
+{
+    wxString mypath = TextPath->GetValue();
+    int count = ConvertAllFilesToGBK(mypath);
+    StaticResult->SetLabel(wxString::Format("%d files converted to GBK.", count));
 }
