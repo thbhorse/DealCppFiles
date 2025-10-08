@@ -13,6 +13,9 @@
 #include <iostream>
 #include <fstream>
 #include <regex>
+#include <set>
+#include <cctype>
+#include <algorithm>
 
 //(*InternalHeaders(DealCppFilesDialog)
 #include <wx/intl.h>
@@ -61,6 +64,7 @@ const wxWindowID DealCppFilesDialog::ID_BUTTON3 = wxNewId();
 const wxWindowID DealCppFilesDialog::ID_STATICTEXT6 = wxNewId();
 const wxWindowID DealCppFilesDialog::ID_BUTTON4 = wxNewId();
 const wxWindowID DealCppFilesDialog::ID_BUTTON5 = wxNewId();
+const wxWindowID DealCppFilesDialog::ID_BUTTON6 = wxNewId();
 //*)
 
 BEGIN_EVENT_TABLE(DealCppFilesDialog,wxDialog)
@@ -81,19 +85,25 @@ DealCppFilesDialog::DealCppFilesDialog(wxWindow* parent,wxWindowID id)
     TextNewFunc = new wxTextCtrl(this, ID_TEXTCTRL3, wxEmptyString, wxPoint(232,112), wxSize(592,192), wxTE_MULTILINE, wxDefaultValidator, _T("ID_TEXTCTRL3"));
     StaticText4 = new wxStaticText(this, ID_STATICTEXT4, _("Result:"), wxPoint(16,336), wxDefaultSize, 0, _T("ID_STATICTEXT4"));
     StaticResult = new wxStaticText(this, ID_STATICTEXT5, wxEmptyString, wxPoint(88,328), wxSize(848,104), wxBORDER_SIMPLE, _T("ID_STATICTEXT5"));
-    Button1 = new wxButton(this, ID_BUTTON1, _("Replace"), wxPoint(56,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON1"));
+    Button1 = new wxButton(this, ID_BUTTON1, _("Replace"), wxPoint(16,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON1"));
+    Button1->SetHelpText(_("Start to replace old function with a new."));
     BitmapButton1 = new wxBitmapButton(this, ID_BITMAPBUTTON1, wxNullBitmap, wxPoint(232,488), wxDefaultSize, wxBU_AUTODRAW, wxDefaultValidator, _T("ID_BITMAPBUTTON1"));
     Button2 = new wxButton(this, ID_BUTTON2, _("Quit"), wxPoint(688,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON2"));
     Button3 = new wxButton(this, ID_BUTTON3, _("About"), wxPoint(816,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON3"));
     StaticText5 = new wxStaticText(this, ID_STATICTEXT6, _("example:\nOld Function Name:\t\t_llseek\nNew Function Express: \t\tSetFilePointer((HANDLE)%1,%2,0,%3)\n\t\t\t\tSetFilePointer(%1,%2,0,%3=0\?FILE_BEGIN)"), wxPoint(72,560), wxSize(872,128), 0, _T("ID_STATICTEXT6"));
-    Button4 = new wxButton(this, ID_BUTTON4, _("->UTF8"), wxPoint(192,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON4"));
-    Button5 = new wxButton(this, ID_BUTTON5, _("->GBK"), wxPoint(328,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON5"));
+    Button4 = new wxButton(this, ID_BUTTON4, _("->UTF8"), wxPoint(136,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON4"));
+    Button4->SetHelpText(_("Convert all cpp file\'s encode to UTF-8"));
+    Button5 = new wxButton(this, ID_BUTTON5, _("->GBK"), wxPoint(256,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON5"));
+    Button5->SetHelpText(_("Convert all cpp files encode to GBK"));
+    Button6 = new wxButton(this, ID_BUTTON6, _("FindCppInMakeFile"), wxPoint(376,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON6"));
+    Button6->SetHelpText(_("Search the makefile file, list all dependents, and write to a file"));
 
     Connect(ID_BUTTON1, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&DealCppFilesDialog::OnStartClick);
     Connect(ID_BUTTON2, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&DealCppFilesDialog::OnQuit);
     Connect(ID_BUTTON3, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&DealCppFilesDialog::OnAbout);
     Connect(ID_BUTTON4, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&DealCppFilesDialog::OnToUTF8Click);
     Connect(ID_BUTTON5, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&DealCppFilesDialog::OnToGBKClick);
+    Connect(ID_BUTTON6, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&DealCppFilesDialog::OnSearchMakefileClick);
     //*)
 }
 
@@ -133,6 +143,7 @@ int TraverseCppFiles(const wxString& mypath, const wxString& oldFunc, const wxSt
 
 void DealCppFilesDialog::OnStartClick(wxCommandEvent& event)
 {
+    StaticResult->SetLabel("Processing...");
     wxString mypath = TextPath->GetValue();
     wxString oldFunc = TextOldFunc->GetValue();
     wxString newFunc = TextNewFunc->GetValue();
@@ -384,6 +395,7 @@ int ConvertAllFilesToUTF8(const wxString& mypath) {
 
 void DealCppFilesDialog::OnToUTF8Click(wxCommandEvent& event)
 {
+    StaticResult->SetLabel("Processing...");
     wxString mypath = TextPath->GetValue();
     int count = ConvertAllFilesToUTF8(mypath);
     StaticResult->SetLabel(wxString::Format("%d files converted to UTF-8.", count));
@@ -437,7 +449,127 @@ int ConvertAllFilesToGBK(const wxString& mypath) {
 
 void DealCppFilesDialog::OnToGBKClick(wxCommandEvent& event)
 {
+    StaticResult->SetLabel("Processing...");
     wxString mypath = TextPath->GetValue();
     int count = ConvertAllFilesToGBK(mypath);
     StaticResult->SetLabel(wxString::Format("%d files converted to GBK.", count));
 }
+
+// 从makefile中查找所有依赖的cpp文件名，存入set
+bool FindCppFilesInMakefile(const std::string& makefilePath, std::set<std::string>& cppFiles, int& lineCount) {
+    std::ifstream fin(makefilePath);
+    if (!fin.is_open()) return false;
+    std::string line;
+    std::regex pattern(R"(:\s*([^\s]+\.(cpp|rc)$))", std::regex_constants::icase);
+    std::regex patternSpace(R"(^\s*$)");
+    while (std::getline(fin, line)) {
+        std::smatch match;
+        if (std::regex_search(line, match, pattern)) {
+            std::string cppFile = match[1].str();
+            std::transform(cppFile.begin(), cppFile.end(), cppFile.begin(), ::tolower); // 转为小写
+            cppFiles.insert(cppFile);
+        }
+        if(!std::regex_search(line, match, patternSpace)) {
+            lineCount++;
+        }
+    }
+    fin.close();
+    return true;
+}
+
+// 从cpp中查找所有依赖的h文件名，存入set
+bool FindHeadFilesInCpp(const std::string& cppFilePath, std::set<std::string>& cppFiles, int& lineCount) {
+    std::ifstream fin(cppFilePath);
+    if (!fin.is_open()) return false;
+    std::string line;
+    std::regex pattern(R"(^\s*#\s*include\s+\"(\S+.h)\"$)", std::regex_constants::icase);
+    std::regex patternSpace(R"(^\s*$)");
+    while (std::getline(fin, line)) {
+        std::smatch match;
+        if (std::regex_search(line, match, pattern)) {
+            std::string cppFile = match[1].str();
+            std::transform(cppFile.begin(), cppFile.end(), cppFile.begin(), ::tolower); // 转为小写
+            cppFiles.insert(cppFile);
+        }
+        if(!std::regex_search(line, match, patternSpace)) {
+            lineCount++;
+        }
+    }
+    fin.close();
+    return true;
+}
+
+void DealCppFilesDialog::OnSearchMakefileClick(wxCommandEvent& event)
+{
+    StaticResult->SetLabel("Processing...");
+    wxString mypath = TextPath->GetValue();
+    std::set<std::string> cppFiles;
+    int lineCount = 0;
+    if(!FindCppFilesInMakefile(mypath.ToStdString(), cppFiles, lineCount)) {
+        StaticResult->SetLabel("Failed to open makefile.");
+        return;
+    }
+    size_t endpos = mypath.ToStdString().find_last_of("\\/");
+    if(endpos != std::string::npos) {
+        mypath = mypath.Left(endpos + 1);
+    } else {
+        mypath = ".\\";
+    }
+    std::set<std::string> headFiles;
+    for(auto it = cppFiles.begin(); it != cppFiles.end(); ) {
+        std::string fullPath = mypath.ToStdString() + *it;
+        if(FindHeadFilesInCpp(fullPath, headFiles, lineCount)) {
+            ++it;
+        } else {
+            it = cppFiles.erase(it); // 文件不存在或无法打开，移除
+        }
+    }
+    std::set<std::string> headFiles2;
+    int lineCount2 = 0;
+    for(auto it = headFiles.begin(); it != headFiles.end(); ) {
+        std::string fullPath = mypath.ToStdString() + *it;
+        if(FindHeadFilesInCpp(fullPath, headFiles2, lineCount2)) {
+            ++it;
+        } else {
+            it = headFiles.erase(it);
+        }
+    }
+    for(auto it = headFiles2.begin(); it != headFiles2.end(); ) {
+        std::string fullPath = mypath.ToStdString() + *it;
+        if(std::filesystem::exists(fullPath)) {
+            ++it;
+        }
+        else {
+            it = headFiles2.erase(it);
+        }
+    }
+    headFiles.insert(headFiles2.begin(), headFiles2.end());
+    std::string fullPath = mypath.ToStdString() + "FileList.txt";
+    std::ofstream fout(fullPath, std::ios::trunc);
+    fout << "# This file lists all cpp and h files found in makefile and their dependencies." << std::endl;
+    for (const auto& file : cppFiles) {
+        fout << file << std::endl;
+    }
+    for( const auto& file : headFiles) {
+        fout << file << std::endl;
+    }
+
+    fout << std::endl;
+    fout << "# Total " << cppFiles.size() << " cpp files and " << headFiles.size() << " h files found in makefile." << std::endl;
+    fout << "# Total " << lineCount << " lines processed in cpp and h files." << std::endl;
+    fout << "# The following files are not listed in makefile, you may consider deleting them." << std::endl;
+    //检查目录中的不需要的cpp, h文件
+    for (const auto& entry : std::filesystem::directory_iterator(mypath.ToStdString())) {
+        std::string ext = entry.path().extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower); // 转为小写
+        if (entry.is_regular_file() && (ext == ".cpp" || ext == ".h")) {
+            std::string filename = entry.path().filename().string();
+            std::transform(filename.begin(), filename.end(), filename.begin(), ::tolower); // 转为小写
+            if(cppFiles.find(filename) == cppFiles.end() && headFiles.find(filename) == headFiles.end()) {
+                fout << "# " << filename << std::endl; // 前面加#表示不需要的文件
+            }
+        }
+    }
+    StaticResult->SetLabel(wxString::Format("Found %d cpp files and %d h files, written to FileList.txt", (int)cppFiles.size(), (int)headFiles.size()));
+}
+

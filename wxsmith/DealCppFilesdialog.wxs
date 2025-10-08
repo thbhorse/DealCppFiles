@@ -42,7 +42,8 @@
 		</object>
 		<object class="wxButton" name="ID_BUTTON1" variable="Button1" member="yes">
 			<label>Replace</label>
-			<pos>56,480</pos>
+			<pos>16,480</pos>
+			<help>Start to replace old function with a new.</help>
 			<handler function="OnStartClick" entry="EVT_BUTTON" />
 		</object>
 		<object class="wxBitmapButton" name="ID_BITMAPBUTTON1" variable="BitmapButton1" member="yes">
@@ -65,13 +66,21 @@
 		</object>
 		<object class="wxButton" name="ID_BUTTON4" variable="Button4" member="yes">
 			<label>-&gt;UTF8</label>
-			<pos>192,480</pos>
+			<pos>136,480</pos>
+			<help>Convert all cpp file&apos;s encode to UTF-8</help>
 			<handler function="OnToUTF8Click" entry="EVT_BUTTON" />
 		</object>
 		<object class="wxButton" name="ID_BUTTON5" variable="Button5" member="yes">
 			<label>-&gt;GBK</label>
-			<pos>328,480</pos>
+			<pos>256,480</pos>
+			<help>Convert all cpp files encode to GBK</help>
 			<handler function="OnToGBKClick" entry="EVT_BUTTON" />
+		</object>
+		<object class="wxButton" name="ID_BUTTON6" variable="Button6" member="yes">
+			<label>FindCppInMakeFile</label>
+			<pos>376,480</pos>
+			<help>Search the makefile file, list all dependents, and write to a file</help>
+			<handler function="OnSearchMakefileClick" entry="EVT_BUTTON" />
 		</object>
 	</object>
 </wxsmith>
