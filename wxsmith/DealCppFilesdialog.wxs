@@ -43,11 +43,8 @@
 		<object class="wxButton" name="ID_BUTTON1" variable="Button1" member="yes">
 			<label>Replace</label>
 			<pos>16,480</pos>
-			<help>Start to replace old function with a new.</help>
+			<tooltip>Start to replace old function with a new.</tooltip>
 			<handler function="OnStartClick" entry="EVT_BUTTON" />
-		</object>
-		<object class="wxBitmapButton" name="ID_BITMAPBUTTON1" variable="BitmapButton1" member="yes">
-			<pos>232,488</pos>
 		</object>
 		<object class="wxButton" name="ID_BUTTON2" variable="Button2" member="yes">
 			<label>Quit</label>
@@ -67,19 +64,19 @@
 		<object class="wxButton" name="ID_BUTTON4" variable="Button4" member="yes">
 			<label>-&gt;UTF8</label>
 			<pos>136,480</pos>
-			<help>Convert all cpp file&apos;s encode to UTF-8</help>
+			<tooltip>Convert all cpp file&apos;s encode to UTF-8</tooltip>
 			<handler function="OnToUTF8Click" entry="EVT_BUTTON" />
 		</object>
 		<object class="wxButton" name="ID_BUTTON5" variable="Button5" member="yes">
 			<label>-&gt;GBK</label>
 			<pos>256,480</pos>
-			<help>Convert all cpp files encode to GBK</help>
+			<tooltip>Convert all cpp file&apos;s encode to GBK</tooltip>
 			<handler function="OnToGBKClick" entry="EVT_BUTTON" />
 		</object>
 		<object class="wxButton" name="ID_BUTTON6" variable="Button6" member="yes">
 			<label>FindCppInMakeFile</label>
 			<pos>376,480</pos>
-			<help>Search the makefile file, list all dependents, and write to a file</help>
+			<tooltip>Search the makefile file, list all dependents, and write to a file</tooltip>
 			<handler function="OnSearchMakefileClick" entry="EVT_BUTTON" />
 		</object>
 	</object>

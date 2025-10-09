@@ -58,7 +58,6 @@ const wxWindowID DealCppFilesDialog::ID_TEXTCTRL3 = wxNewId();
 const wxWindowID DealCppFilesDialog::ID_STATICTEXT4 = wxNewId();
 const wxWindowID DealCppFilesDialog::ID_STATICTEXT5 = wxNewId();
 const wxWindowID DealCppFilesDialog::ID_BUTTON1 = wxNewId();
-const wxWindowID DealCppFilesDialog::ID_BITMAPBUTTON1 = wxNewId();
 const wxWindowID DealCppFilesDialog::ID_BUTTON2 = wxNewId();
 const wxWindowID DealCppFilesDialog::ID_BUTTON3 = wxNewId();
 const wxWindowID DealCppFilesDialog::ID_STATICTEXT6 = wxNewId();
@@ -86,17 +85,16 @@ DealCppFilesDialog::DealCppFilesDialog(wxWindow* parent,wxWindowID id)
     StaticText4 = new wxStaticText(this, ID_STATICTEXT4, _("Result:"), wxPoint(16,336), wxDefaultSize, 0, _T("ID_STATICTEXT4"));
     StaticResult = new wxStaticText(this, ID_STATICTEXT5, wxEmptyString, wxPoint(88,328), wxSize(848,104), wxBORDER_SIMPLE, _T("ID_STATICTEXT5"));
     Button1 = new wxButton(this, ID_BUTTON1, _("Replace"), wxPoint(16,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON1"));
-    Button1->SetHelpText(_("Start to replace old function with a new."));
-    BitmapButton1 = new wxBitmapButton(this, ID_BITMAPBUTTON1, wxNullBitmap, wxPoint(232,488), wxDefaultSize, wxBU_AUTODRAW, wxDefaultValidator, _T("ID_BITMAPBUTTON1"));
+    Button1->SetToolTip(_("Start to replace old function with a new."));
     Button2 = new wxButton(this, ID_BUTTON2, _("Quit"), wxPoint(688,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON2"));
     Button3 = new wxButton(this, ID_BUTTON3, _("About"), wxPoint(816,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON3"));
     StaticText5 = new wxStaticText(this, ID_STATICTEXT6, _("example:\nOld Function Name:\t\t_llseek\nNew Function Express: \t\tSetFilePointer((HANDLE)%1,%2,0,%3)\n\t\t\t\tSetFilePointer(%1,%2,0,%3=0\?FILE_BEGIN)"), wxPoint(72,560), wxSize(872,128), 0, _T("ID_STATICTEXT6"));
     Button4 = new wxButton(this, ID_BUTTON4, _("->UTF8"), wxPoint(136,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON4"));
-    Button4->SetHelpText(_("Convert all cpp file\'s encode to UTF-8"));
+    Button4->SetToolTip(_("Convert all cpp file\'s encode to UTF-8."));
     Button5 = new wxButton(this, ID_BUTTON5, _("->GBK"), wxPoint(256,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON5"));
-    Button5->SetHelpText(_("Convert all cpp files encode to GBK"));
+    Button5->SetToolTip(_("Convert all cpp files encode to GBK"));
     Button6 = new wxButton(this, ID_BUTTON6, _("FindCppInMakeFile"), wxPoint(376,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON6"));
-    Button6->SetHelpText(_("Search the makefile file, list all dependents, and write to a file"));
+    Button6->SetToolTip(_("Search the makefile file, list all dependents, and write to file FileList.txt."));
 
     Connect(ID_BUTTON1, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&DealCppFilesDialog::OnStartClick);
     Connect(ID_BUTTON2, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&DealCppFilesDialog::OnQuit);
@@ -460,7 +458,7 @@ bool FindCppFilesInMakefile(const std::string& makefilePath, std::set<std::strin
     std::ifstream fin(makefilePath);
     if (!fin.is_open()) return false;
     std::string line;
-    std::regex pattern(R"(:\s*([^\s]+\.(cpp|rc)$))", std::regex_constants::icase);
+    std::regex pattern(R"(:\s*([^\s]+\.(cpp|rc))\s*$)", std::regex_constants::icase);
     std::regex patternSpace(R"(^\s*$)");
     while (std::getline(fin, line)) {
         std::smatch match;
@@ -482,7 +480,7 @@ bool FindHeadFilesInCpp(const std::string& cppFilePath, std::set<std::string>& c
     std::ifstream fin(cppFilePath);
     if (!fin.is_open()) return false;
     std::string line;
-    std::regex pattern(R"(^\s*#\s*include\s+\"(\S+.h)\"$)", std::regex_constants::icase);
+    std::regex pattern(R"(^\s*#\s*include\s+\"(\S+.h)\"\s*$)", std::regex_constants::icase);
     std::regex patternSpace(R"(^\s*$)");
     while (std::getline(fin, line)) {
         std::smatch match;

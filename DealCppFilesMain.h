@@ -11,7 +11,6 @@
 #define DEALCPPFILESMAIN_H
 
 //(*Headers(DealCppFilesDialog)
-#include <wx/bmpbuttn.h>
 #include <wx/button.h>
 #include <wx/dialog.h>
 #include <wx/stattext.h>
@@ -46,7 +45,6 @@ class DealCppFilesDialog: public wxDialog
         static const wxWindowID ID_STATICTEXT4;
         static const wxWindowID ID_STATICTEXT5;
         static const wxWindowID ID_BUTTON1;
-        static const wxWindowID ID_BITMAPBUTTON1;
         static const wxWindowID ID_BUTTON2;
         static const wxWindowID ID_BUTTON3;
         static const wxWindowID ID_STATICTEXT6;
@@ -56,7 +54,6 @@ class DealCppFilesDialog: public wxDialog
         //*)
 
         //(*Declarations(DealCppFilesDialog)
-        wxBitmapButton* BitmapButton1;
         wxButton* Button1;
         wxButton* Button2;
         wxButton* Button3;
