@@ -33,6 +33,7 @@ class DealCppFilesDialog: public wxDialog
         void OnToUTF8Click(wxCommandEvent& event);
         void OnToGBKClick(wxCommandEvent& event);
         void OnSearchMakefileClick(wxCommandEvent& event);
+        void OnFormatClick(wxCommandEvent& event);
         //*)
 
         //(*Identifiers(DealCppFilesDialog)
@@ -51,6 +52,7 @@ class DealCppFilesDialog: public wxDialog
         static const wxWindowID ID_BUTTON4;
         static const wxWindowID ID_BUTTON5;
         static const wxWindowID ID_BUTTON6;
+        static const wxWindowID ID_BUTTON7;
         //*)
 
         //(*Declarations(DealCppFilesDialog)
@@ -60,6 +62,7 @@ class DealCppFilesDialog: public wxDialog
         wxButton* Button4;
         wxButton* Button5;
         wxButton* Button6;
+        wxButton* Button7;
         wxStaticText* StaticResult;
         wxStaticText* StaticText1;
         wxStaticText* StaticText2;

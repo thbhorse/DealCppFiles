@@ -58,7 +58,7 @@
 		</object>
 		<object class="wxStaticText" name="ID_STATICTEXT6" variable="StaticText5" member="yes">
 			<label>example:&#x0A;Old Function Name:\\t\\t__llseek&#x0A;New Function Express: \\t\\tSetFilePointer((HANDLE)%1,%2,0,%3)&#x0A;\\t\\tSetFilePointer(%1,%2,0,%3=0?FILE__BEGIN)</label>
-			<pos>72,560</pos>
+			<pos>64,608</pos>
 			<size>872,128</size>
 		</object>
 		<object class="wxButton" name="ID_BUTTON4" variable="Button4" member="yes">
@@ -78,6 +78,11 @@
 			<pos>376,480</pos>
 			<tooltip>Search the makefile file, list all dependents, and write to a file</tooltip>
 			<handler function="OnSearchMakefileClick" entry="EVT_BUTTON" />
+		</object>
+		<object class="wxButton" name="ID_BUTTON7" variable="Button7" member="yes">
+			<label>Format</label>
+			<pos>16,528</pos>
+			<handler function="OnFormatClick" entry="EVT_BUTTON" />
 		</object>
 	</object>
 </wxsmith>

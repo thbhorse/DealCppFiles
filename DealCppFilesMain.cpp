@@ -64,6 +64,7 @@ const wxWindowID DealCppFilesDialog::ID_STATICTEXT6 = wxNewId();
 const wxWindowID DealCppFilesDialog::ID_BUTTON4 = wxNewId();
 const wxWindowID DealCppFilesDialog::ID_BUTTON5 = wxNewId();
 const wxWindowID DealCppFilesDialog::ID_BUTTON6 = wxNewId();
+const wxWindowID DealCppFilesDialog::ID_BUTTON7 = wxNewId();
 //*)
 
 BEGIN_EVENT_TABLE(DealCppFilesDialog,wxDialog)
@@ -88,13 +89,14 @@ DealCppFilesDialog::DealCppFilesDialog(wxWindow* parent,wxWindowID id)
     Button1->SetToolTip(_("Start to replace old function with a new."));
     Button2 = new wxButton(this, ID_BUTTON2, _("Quit"), wxPoint(688,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON2"));
     Button3 = new wxButton(this, ID_BUTTON3, _("About"), wxPoint(816,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON3"));
-    StaticText5 = new wxStaticText(this, ID_STATICTEXT6, _("example:\nOld Function Name:\t\t_llseek\nNew Function Express: \t\tSetFilePointer((HANDLE)%1,%2,0,%3)\n\t\t\t\tSetFilePointer(%1,%2,0,%3=0\?FILE_BEGIN)"), wxPoint(72,560), wxSize(872,128), 0, _T("ID_STATICTEXT6"));
+    StaticText5 = new wxStaticText(this, ID_STATICTEXT6, _("example:\nOld Function Name:\t\t_llseek\nNew Function Express: \t\tSetFilePointer((HANDLE)%1,%2,0,%3)\n\t\t\t\tSetFilePointer(%1,%2,0,%3=0\?FILE_BEGIN)"), wxPoint(64,608), wxSize(872,128), 0, _T("ID_STATICTEXT6"));
     Button4 = new wxButton(this, ID_BUTTON4, _("->UTF8"), wxPoint(136,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON4"));
-    Button4->SetToolTip(_("Convert all cpp file\'s encode to UTF-8."));
+    Button4->SetToolTip(_("Convert all cpp file\'s encode to UTF-8"));
     Button5 = new wxButton(this, ID_BUTTON5, _("->GBK"), wxPoint(256,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON5"));
-    Button5->SetToolTip(_("Convert all cpp files encode to GBK"));
+    Button5->SetToolTip(_("Convert all cpp file\'s encode to GBK"));
     Button6 = new wxButton(this, ID_BUTTON6, _("FindCppInMakeFile"), wxPoint(376,480), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON6"));
-    Button6->SetToolTip(_("Search the makefile file, list all dependents, and write to file FileList.txt."));
+    Button6->SetToolTip(_("Search the makefile file, list all dependents, and write to a file"));
+    Button7 = new wxButton(this, ID_BUTTON7, _("Format"), wxPoint(16,528), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON7"));
 
     Connect(ID_BUTTON1, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&DealCppFilesDialog::OnStartClick);
     Connect(ID_BUTTON2, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&DealCppFilesDialog::OnQuit);
@@ -102,6 +104,7 @@ DealCppFilesDialog::DealCppFilesDialog(wxWindow* parent,wxWindowID id)
     Connect(ID_BUTTON4, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&DealCppFilesDialog::OnToUTF8Click);
     Connect(ID_BUTTON5, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&DealCppFilesDialog::OnToGBKClick);
     Connect(ID_BUTTON6, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&DealCppFilesDialog::OnSearchMakefileClick);
+    Connect(ID_BUTTON7, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&DealCppFilesDialog::OnFormatClick);
     //*)
 }
 
@@ -571,3 +574,100 @@ void DealCppFilesDialog::OnSearchMakefileClick(wxCommandEvent& event)
     StaticResult->SetLabel(wxString::Format("Found %d cpp files and %d h files, written to FileList.txt", (int)cppFiles.size(), (int)headFiles.size()));
 }
 
+int  FormatCppFile(const std::string& filepath);
+
+
+int FormatCppFiles(const wxString& mypath, int& replaceCount) {
+    int count = 0;
+    namespace fs = std::filesystem;
+    for (const auto& entry : fs::directory_iterator(mypath.ToStdString())) {
+        std::string ext = entry.path().extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower); // 转为小写
+        if (entry.is_regular_file() && (ext == ".cpp" || ext == ".h")) {
+            count++;
+            replaceCount += FormatCppFile(entry.path().string());
+        }
+    }
+    return count;
+}
+
+int  FormatCppFile(const std::string& filepath) {
+    int lineNum = 0;
+    int replaceCount = 0;
+    std::ofstream log("d:\\temp\\DealCppFiles_Format.log", std::ios::app);
+    std::ifstream fileIn(filepath);
+    if (!fileIn.is_open()) {
+        return 0;
+    }
+    std::vector<std::string> lines; // 用于保存所有行
+    std::string line;
+    while (std::getline(fileIn, line)) {
+        lineNum++;
+        std::string originalLine = line;
+        // 去除行尾多余空格
+        size_t endpos = line.find_last_not_of(" \t");
+        if (endpos != std::string::npos) {
+            line = line.substr(0, endpos + 1);
+        } else {
+            line.clear(); // 全是空格
+        }
+        // 替换制表符为2个空格
+        size_t tabpos = line.find('\t');
+        while (tabpos != std::string::npos) {
+            line.replace(tabpos, 1, "  ");
+            tabpos = line.find('\t', tabpos + 2);
+        }
+        if(line != originalLine) {
+            replaceCount++;
+            log << "Formatted in file: " << filepath << " LineNum: " << lineNum << " Line: " << line << std::endl;
+        }
+        lines.push_back(line); // 保存处理后的行
+    }
+    fileIn.close();
+    //把 {}缩进，改为不缩进
+    size_t pos_p =  std::string::npos;
+    for(size_t i=0; i < lines.size(); i++) {
+        std::string line = lines[i];
+        std::string originalLine = line;
+        size_t pos = line.find_first_not_of(" \t");
+        if(pos != std::string::npos && line[pos] == '{' && pos_p != std::string::npos && pos > pos_p) {
+            line = line.substr(pos - pos_p);
+            pos_p = pos;
+        }
+        else if(pos != std::string::npos && line[pos] == '}' && pos_p != std::string::npos && pos == pos_p && pos >= 2) {
+            line = line.substr(2);
+            pos_p = pos - 2;
+        }
+        else {
+            if(pos != std::string::npos && line[pos] != '/' && line[pos] != '#' && line[pos] != '{') // 注释行不处理
+                pos_p = pos;
+            else
+                pos_p = std::string::npos;
+        }
+        if(line != originalLine) {
+            lines[i] = line;
+            replaceCount++;
+            log << "Formatted in file: " << filepath << " LineNum: " << (i + 1) << " Line: " << line << std::endl;
+        }
+    }
+
+    // 写回原文件
+    if(replaceCount > 0) {
+        std::ofstream fileOut(filepath, std::ios::trunc);
+        for (const auto& l : lines) {
+            fileOut << l << std::endl;
+        }
+        fileOut.close();
+    }
+    return replaceCount;
+}
+
+
+void DealCppFilesDialog::OnFormatClick(wxCommandEvent& event)
+{
+    StaticResult->SetLabel("Processing...");
+    wxString mypath = TextPath->GetValue();
+    int replaceCount = 0;
+    int count = FormatCppFiles(mypath, replaceCount);
+    StaticResult->SetLabel(wxString::Format("Processed %d cpp/h files, Replaced %d lines", count, replaceCount));
+}
